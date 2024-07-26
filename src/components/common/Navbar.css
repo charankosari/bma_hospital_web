@@ -1,0 +1,338 @@
+/* styles.css */
+
+/* General styling */
+body {
+  font-family: Arial, sans-serif;
+}
+
+.navbar {
+  background-color: #333333;
+  position: relative;
+  width: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 0.5rem;
+  height: 10vh;
+}
+
+.navbar-content {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  margin-left: -0px;
+  margin-right: 10px;
+}
+
+.search-container {
+  position: relative;
+  width: 90%;
+  flex: 1;
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  font-size: 1.25rem;
+  color: #ccc;
+}
+
+.search-input {
+  height: 2.5rem;
+  padding-left: 2.5rem;
+  width: 90%;
+  background-color: white;
+  color: black;
+  border: none;
+  border-radius: 10px;
+  outline: none;
+}
+
+.dropdown {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+  font-size: 1.5rem;
+  position: relative;
+}
+
+.dropdown .btn {
+  background-color: #333333;
+  color: white;
+  font-size: 0.75rem;
+  padding-left: 0.25rem;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropdown .btn .location-icon {
+  font-size: 1.5rem;
+}
+
+.dropdown .btn .location-title{
+  font-size: 16px;
+  margin-top: 4px;
+}
+.dropdown .btn .chevron-icon {
+  margin-top: 0.25rem;
+  font-size: 1.125rem;
+}
+
+.location-dropdown {
+  display: none;
+  position: absolute;
+  top: 6vh;
+  left: -100%; /* Adjust this value to move the dropdown to the left */
+  z-index: 1;
+  background-color: #333333;
+  padding: 0.5rem 0;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  width: 200px;
+}
+
+.dropdown .location-dropdown {
+  display: block;
+}
+
+.location-dropdown p {
+  display: block; /* Ensure the paragraphs are block-level elements */
+  width: 100%; /* Make them take the full width of the parent */
+  text-align: center; /* Center the text */
+  padding: 10px 0; /* Add padding to ensure equal gap from top and bottom */
+  margin: 0; /* Remove margin to avoid extra spacing */
+  font-size: medium;
+  cursor: pointer;
+  color: white;
+  text-decoration: none;
+  border-bottom: 1px solid white; /* Add a bottom border to separate options */
+}
+
+.location-dropdown p:last-child {
+  border-bottom: none; /* Remove the bottom border for the last option */
+}
+
+.location-dropdown p:hover {
+  background-color: #555555;
+}
+
+
+.dropdown-end {
+  display: flex;
+  align-items: center;
+}
+
+.avatar {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+
+.avatar-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.menu-dropdown {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center the content horizontally */
+  position: absolute;
+  top: 100%;
+  right: 0;
+  z-index: 1;
+  background-color: #333333;
+  padding: 0.5rem 0;
+  border-bottom-left-radius: 5px;
+  border-bottom-right-radius: 5px;
+  width: 250px;
+}
+
+.menu-dropdown a,
+.menu-dropdown p {
+  display: block; /* Ensure the links and paragraphs are block-level elements */
+  width: 100%; /* Make them take the full width of the parent */
+  text-align: center; /* Center the text */
+  padding: 10px 0; /* Add padding to ensure equal gap from top and bottom */
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.menu-dropdown a:hover,
+.menu-dropdown p:hover {
+  background-color: #555555;
+}
+
+/* Add a line between each option */
+.menu-dropdown a:not(:last-child),
+.menu-dropdown p:not(:last-child) {
+  border-bottom: 1px solid #555555;
+}
+
+.login-button {
+  background-color: #2BB673;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  height: 2.5rem;
+}
+
+.login-button:hover {
+  background-color: #299963;
+}
+
+/* Media queries for responsiveness */
+@media (max-width: 1024px) {
+  .logo{
+    height: 50px;
+    width: 50px;
+  }
+  .navbar-content {
+    display: flex;
+    align-items: center;
+  }
+
+  .search-container {
+    flex: 0.97;
+    display: flex;
+    justify-content: flex-start; /* Align the search container to the start */
+  }
+  .dropdown,
+  .dropdown-end {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .menu-dropdown {
+    width: 200px;
+    right: 0px;
+    left: 100;
+    top: 100%;
+    text-align: center;
+  }
+
+  .location-dropdown {  
+    width: 200px;
+    left: -50%;
+  }
+  .dropdown .btn .location-icon {
+    font-size: 1.25rem;
+  }
+  
+  .dropdown .btn .location-title{
+    font-size: 16px;
+    margin-top: 4px;
+  }
+  .dropdown .btn .chevron-icon {
+    margin-top: 0.25rem;
+    font-size: 1.125rem;
+  }
+  .login-button {
+    background-color: #2BB673;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    height: 2.5rem;
+    width: 7rem;
+    font-size: larger;
+  }
+}
+
+@media (max-width: 768px) {
+  .logo {
+    width: 50px;
+    height: 50px;
+  }
+
+  .search-container {
+    flex: 0.95;
+    display: flex;
+    justify-content: flex-start; /* Align the search container to the start */
+  }
+
+  .dropdown .btn {
+    font-size: 0.625rem;
+    padding-left: 0.125rem;
+  }
+
+  .dropdown .btn .location-icon {
+    font-size: 1.25rem;
+  }
+  .dropdown .btn .location-title{
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  .dropdown .btn .chevron-icon {
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo {
+    width: 40px;
+    height: 40px;
+  }
+
+  .search-container {
+    flex: 0.85;
+    display: flex;
+    justify-content: flex-start; /* Align the search container to the start */
+  }
+
+  .search-input {
+    height: 2.5rem;
+    padding-left: 2.5rem;
+    width: 100%; /* Adjust this width as needed */
+    max-width: 200px; /* Optional: limit the maximum width */
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 10px;
+    outline: none;
+  }
+
+  .dropdown .btn {
+    font-size: 0.5rem;
+  }
+
+  .dropdown .btn .location-icon {
+    font-size: 01.25rem;
+  }
+
+  .dropdown .btn .chevron-icon {
+    font-size: 0.9rem;
+  }
+
+  .login-button {
+    background-color: #2BB673;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    height: 2.5rem;
+    width: 5rem;
+   font-size: medium;
+  }
+}

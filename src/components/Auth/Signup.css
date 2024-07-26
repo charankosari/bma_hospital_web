@@ -1,0 +1,117 @@
+.signup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(5px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+
+
+.signup-link {
+    color: #2BB673;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  
+  .signup-link:hover {
+    text-decoration: underline;
+  }
+
+.signup {
+    background: white;
+    border-radius: 20px;
+    height: 60vh;
+    width: 25vw;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-evenly;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.signup h3 {
+    align-self: center;
+    font-size: xx-large;
+    color: black;
+    margin-bottom: 20px;
+}
+
+.signup input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: none;
+    border-bottom: 1px solid #ccc;
+    outline: none; /* Remove default focus outline */
+    font-size: 16px;
+}
+
+.signup input:focus {
+    border-bottom: 2px solid #2BB673;
+}
+
+
+.signup button {
+    padding: 10px 20px;
+    background: #2BB673;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    height: 12%;
+    width: 40%;
+    font-size: 2vh;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.signup button:hover {
+    background: #45a049;
+}
+
+/* Ensure box-sizing for all elements */
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .signup {
+        width: 60vw;
+    }
+}
+
+@media (max-width: 480px) {
+    .signup {
+        width: 90vw;
+        padding: 10px;
+        border-radius: 10px;
+    }
+
+    .signup h3 {
+        font-size: large;
+    }
+
+    .signup input {
+        font-size: 14px;
+        padding: 8px;
+    }
+
+    .signup button {
+        font-size: 2.5vh;
+        height: auto;
+        width: 70%;
+        padding: 8px 16px;
+    }
+}
