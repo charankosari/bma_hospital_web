@@ -68,6 +68,7 @@ function App() {
           mobileNumber={mobileNumber} 
           setMobileNumber={setMobileNumber} 
           toggleMobile={toggleMobile} 
+          toggleLogin={toggleLogin} 
           toggleSignup={toggleSignup}
         />
       )}

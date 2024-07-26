@@ -4,20 +4,16 @@ import {
   Button,
   CircularProgress,
   Paper,
-  Step,
-  StepLabel,
-  Stepper,
   TextField,
   Typography,
 } from '@mui/material';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import LandingPage from '../common/LandingPage'; // Import your LandingPage component
 
 const steps = ['Basic Info', 'Address Info', 'Upload Image & Set Location'];
 
-function RegisterScreen({ toggleSignup, toggleMobile }) {
+function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber, mobileNumber, toggleSignup, setHospitalToken, setHospid }) {
   const [activeStep, setActiveStep] = useState(0);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -42,6 +38,12 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
       }
     );
   }, []);
+
+  useEffect(() => {
+    if (activeStep === steps.length - 1) {
+      setOpenModal(true);
+    }
+  }, [activeStep]);
 
   const handleNext = () => {
     if (activeStep === steps.length - 1) {
@@ -119,10 +121,6 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
     }
   };
 
-  const handleOpenModal = () => {
-    setOpenModal(true);
-  };
-
   const handleCloseModal = () => {
     setOpenModal(false);
   };
@@ -151,51 +149,33 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
     <Box
       sx={{
         position: 'fixed',
-      top: 0,
-      left: 0,
-      right: 0,
-      bottom: 0,
-      backgroundColor: 'rgba(0, 0, 0, 0.4)',
-      backdropFilter: 'blur(5px)', 
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      zIndex: 1000,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(5px)', 
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
       }}
     >
-      <Box
-        sx={{
-            borderRadius: '10px',
-            padding: '20px',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            position: 'relative',
-            justifyContent:'center'
-            
-        }}
-      />
       <Paper
         elevation={3}
         sx={{
           p: 3,
-          maxWidth: '600px',
+          maxWidth: '450px',
           width: '100%',
           position: 'relative',
           zIndex: 1,
-       
+          borderRadius: '20px',
         }}
       >
         <Typography component="h1" variant="h5" align="center" sx={{ color: '#2BB673' }}>
           Register
         </Typography>
-        {/* <Stepper activeStep={activeStep} sx={{ pt: 3, pb: 5 }}>
-          {steps.map((label) => (
-            <Step key={label}>
-              <StepLabel sx={{ color: '#2BB673' }}>{label}</StepLabel>
-            </Step>
-          ))}
-        </Stepper> */}
+      
         <form>
           {activeStep === 0 && (
             <Box sx={{ mt: 2 }}>
@@ -238,6 +218,15 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
               />
+              <Typography variant="h6">
+                Already have an account?{' '}
+                <span
+                  style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
+                  onClick={() => { toggleSignup(); toggleMobile(); }}
+                >
+                  Login
+                </span>
+              </Typography>
             </Box>
           )}
           {activeStep === 1 && (
@@ -284,9 +273,6 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
           )}
           {activeStep === 2 && (
             <Box sx={{ mt: 2 }}>
-              <Button variant="contained" onClick={handleOpenModal} sx={{ mb: 2, backgroundColor: '#2BB673', color: 'white' }}>
-                Open Full-Screen Image Upload & Map
-              </Button>
               {openModal && (
                 <div
                   style={{
@@ -324,24 +310,16 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
                     >
                       Close
                     </Button>
-                    <Typography variant="h6">Upload Image</Typography>
+                    <Typography variant="h6" gutterBottom>
+                      Upload Image and Set Location
+                    </Typography>
                     <input
                       type="file"
                       accept="image/*"
                       onChange={handleImageChange}
-                      style={{ margin: '20px 0' }}
+                      style={{ marginBottom: '20px' }}
                     />
-                    {image && (
-                      <img
-                        src={URL.createObjectURL(image)}
-                        alt="Selected"
-                        style={{ maxWidth: '100%', height: 'auto' }}
-                      />
-                    )}
-                    <Typography variant="h6" style={{ marginTop: '20px' }}>
-                      Set Location on Map
-                    </Typography>
-                    <MapContainer center={[latitude, longitude]} zoom={13} style={{ width: '100%', height: '100%' }}>
+                    <MapContainer center={[latitude, longitude]} zoom={13} style={{ height: '60%', width: '100%' }}>
                       <TileLayer
                         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -353,17 +331,20 @@ function RegisterScreen({ toggleSignup, toggleMobile }) {
               )}
             </Box>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3 }}>
-            {activeStep > 0 && (
-              <Button onClick={handleBack} sx={{ mr: 1 }}>
-                Back
-              </Button>
-            )}
+          <Box sx={{ mt: 2 }}>
             <Button
+              color="secondary"
+              disabled={activeStep === 0}
+              onClick={handleBack}
+              sx={{ mr: 1 }}
+            >
+              Back
+            </Button>
+            <Button
+              color="primary"
               variant="contained"
               onClick={handleNext}
               disabled={loading}
-              sx={{ backgroundColor: '#2BB673', color: 'white' }}
             >
               {loading ? <CircularProgress size={24} /> : activeStep === steps.length - 1 ? 'Register' : 'Next'}
             </Button>
