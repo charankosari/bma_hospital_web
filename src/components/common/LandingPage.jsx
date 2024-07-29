@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
-import './LandingPage.css';
+import React, { useState,useEffect } from 'react';
 import Footer from './Footer';
+import DoctorList from '../doctor/DoctorsLists';
+import LabList from '../labs/LabsList';
+function LandingPage({searchQuery }) {
+  const [role, setRole] = useState('');
 
-function LandingPage({}) {
-
+  useEffect(() => {
+    const userRole = localStorage.getItem('role');
+    setRole(userRole);
+  }, []);
 
   return (
     <div>
-      <div className="homepage">
+      <div className="homepage" style={{zIndex:1}}>
+      {role === 'hospital' && <DoctorList searchQuery={searchQuery} />}
+      {role === 'lab' && <LabList searchQuery={searchQuery} />}
     </div>
-      <Footer />
+     <div style={{zIndex:'999'}}> <Footer />
+    </div>
     </div>
   );
 }

@@ -39,7 +39,7 @@ const hospid=sessionStorage.getItem('hospid')
 
       if (data.success) {
         localStorage.setItem('hospitalToken', data.jwtToken);
-        navigate('/');  
+        window.location.reload();
         toggleLogin();
         toggleOtp();
       } else {

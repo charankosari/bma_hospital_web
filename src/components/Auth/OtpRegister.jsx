@@ -1,19 +1,16 @@
 import React, { useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import './OtpScreen.css';
-import { useNavigate, useLocation } from 'react-router-dom';
 
-function OtpRegister({ toggleLogin, toggleReg, mobileNumber }) {
+function OtpRegister({ toggleLogin, toggleReg, toggleSignup, mobileNumber }) {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
-  const location = useLocation();
   const [otp, setOtp] = useState(Array(4).fill(''));
   const [loading, setLoading] = useState(false);
-  const number = Number(mobileNumber); // Ensure mobileNumber is parsed as integer
-  console.log(number)
 
   const handleChange = (e, index) => {
     const value = e.target.value;
-    if (/^\d$/.test(value)) { // Ensure input is a digit
+    if (/^\d$/.test(value)) { 
       setOtp(prevOtp => {
         const newOtp = [...prevOtp];
         newOtp[index] = value;
@@ -22,40 +19,44 @@ function OtpRegister({ toggleLogin, toggleReg, mobileNumber }) {
       if (value.length === 1 && index < 3) {
         inputRefs.current[index + 1].focus();
       }
+    } else if (e.target.value === '') {
+      setOtp(prevOtp => {
+        const newOtp = [...prevOtp];
+        newOtp[index] = '';
+        return newOtp;
+      });
+      if (index > 0) {
+        inputRefs.current[index - 1].focus();
+      }
     }
   };
 
-  const handleSubm=()=>{
-    navigate('/');
-        toggleLogin();
-        toggleReg();
-  }
   const handleSubmit = async () => {
     setLoading(true);
-    const otpNumber = Number(otp.join('')); // Convert OTP digits to integer
-    console.log(otpNumber)
+    const otpNumber = Number(otp.join('')); 
 
-    // Log the data to inspect it
-    console.log('Submitting OTP:', otpNumber);
-    console.log('Submitting Mobile Number:', number);
-   const payload = {  number, otp: otpNumber };
+    const registrationData = sessionStorage.getItem('registrationData');
+    const payload = JSON.parse(registrationData);
+    const updatedPayload = { ...payload, otp:otpNumber };
+    console.log(updatedPayload);
     try {
-      const response = await fetch("https://server.bookmyappointments.in/api/bma/verifyregisterotp", {
+      const response = await fetch("https://server.bookmyappointments.in/api/bma/hospital/verifyregisterotp", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(updatedPayload),
       });
       const data = await response.json();
-      console.log(data)
-      if (data.success) {
-        localStorage.setItem('jwtToken', data.jwtToken);
-        navigate('/');
-        toggleLogin();
+
+      if (response.status === 201) {
+        sessionStorage.removeItem('registrationData'); 
+        localStorage.setItem('hospitalToken', data.jwtToken);
         toggleReg();
+        toggleSignup();
+        window.location.reload()
       } else {
-        alert(data.message || 'Invalid response from server');
+        alert(data.error || 'Registration failed');
       }
     } catch (error) {
       alert('Error: ' + error.message);
@@ -85,6 +86,7 @@ function OtpRegister({ toggleLogin, toggleReg, mobileNumber }) {
         <button className="verify-button" onClick={handleSubmit} disabled={loading}>
           {loading ? 'Verifying...' : 'VERIFY'}
         </button>
+  
       </div>
     </div>
   );

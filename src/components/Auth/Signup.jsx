@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -6,26 +6,62 @@ import {
   Paper,
   TextField,
   Typography,
-} from '@mui/material';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+  FormControl,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+} from "@mui/material";
+import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
+import L from "leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
-const steps = ['Basic Info', 'Address Info', 'Upload Image & Set Location'];
+const steps = ["Basic Info", "Address Info", "Upload Image & Set Location"];
 
-function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber, mobileNumber, toggleSignup, setHospitalToken, setHospid }) {
+function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
   const [activeStep, setActiveStep] = useState(0);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [address, setAddress] = useState('');
-  const [pincode, setPincode] = useState('');
-  const [city, setCity] = useState('');
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState();
+  const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [city, setCity] = useState("");
   const [latitude, setLatitude] = useState(17.38714);
   const [longitude, setLongitude] = useState(78.491684);
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
+  const [role, setRole] = useState("hospital");
   const [openModal, setOpenModal] = useState(false);
+
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API,
+    libraries: ["places"],
+  });
+
+  const samestyle = {
+    mb: 2,
+    fontSize: 18,
+    "& .MuiOutlinedInput-root": {
+      "& fieldset": {
+        borderColor: "black",
+      },
+      "&:hover fieldset": {
+        borderColor: "black",
+      },
+      "&.Mui-focused fieldset": {
+        borderColor: "black",
+      },
+    },
+    "& .MuiInputLabel-root": {
+      color: "black",
+    },
+    "& .MuiInputLabel-root.Mui-focused": {
+      color: "black",
+    },
+  };
+
+  const autocompleteRef = useRef(null); 
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -59,20 +95,23 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
 
   const handleRegister = async () => {
     setLoading(true);
-    let imageUrl = '';
+    let imageUrl = "";
 
     try {
       if (image) {
         const formData = new FormData();
-        formData.append('file', image);
+        formData.append("file", image);
 
-        const response = await fetch('https://server.bookmyappointments.in/api/bma/hospital/profileupload', {
-          method: 'POST',
-          body: formData,
-        });
+        const response = await fetch(
+          "https://server.bookmyappointments.in/api/bma/hospital/profileupload",
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
         const data = await response.json();
         if (response.status !== 200) {
-          throw new Error(data.error || 'Failed to upload image');
+          throw new Error(data.error || "Failed to upload image");
         }
         imageUrl = data.url;
       }
@@ -86,30 +125,35 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
           latitude,
           longitude,
         },
-        number: phoneNumber,
+        number: Number(phoneNumber),
         email,
         image: imageUrl,
+        role,
       };
 
-      const response = await fetch('https://server.bookmyappointments.in/api/bma/hospital/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(body),
-      });
+      const response = await fetch(
+        "https://server.bookmyappointments.in/api/bma/hospital/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+        }
+      );
 
       const data = await response.json();
 
       if (response.status === 200) {
-        alert('Registration successful');
+        sessionStorage.setItem("registrationData", JSON.stringify(body));
+        toggleReg();
         toggleSignup();
       } else {
-        alert(data.error || 'Registration failed');
+        alert(data.error || "Registration failed");
       }
     } catch (error) {
-      console.error('Error:', error);
-      alert(error.message || 'Failed to register, please try again');
+      console.error("Error:", error);
+      alert(error.message || "Failed to register, please try again");
     } finally {
       setLoading(false);
     }
@@ -121,8 +165,9 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
     }
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
+  const handlePlaceSelected = (place) => {
+    setLatitude(place.geometry.location.lat());
+    setLongitude(place.geometry.location.lng());
   };
 
   function LocationMarker() {
@@ -137,10 +182,24 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
       map.setView([latitude, longitude], map.getZoom());
     }, [latitude, longitude, map]);
 
-    return latitude === null ? null : (
+    return (
       <Marker
         position={[latitude, longitude]}
-        icon={new L.Icon({ iconUrl: 'https://leafletjs.com/examples/custom-icons/leaf-red.png' })}
+        draggable={true}
+        icon={L.divIcon({
+          className: "custom-icon",
+          html: '<i class="fas fa-map-marker-alt fa-2x" style="color: red;"></i>',
+          iconSize: [32, 32],
+          iconAnchor: [16, 32],
+        })}
+        eventHandlers={{
+          dragend: (event) => {
+            const marker = event.target;
+            const position = marker.getLatLng();
+            setLatitude(position.lat);
+            setLongitude(position.lng);
+          },
+        }}
       />
     );
   }
@@ -148,34 +207,42 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
   return (
     <Box
       sx={{
-        position: 'fixed',
+        position: "fixed",
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.4)',
-        backdropFilter: 'blur(5px)', 
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+        backdropFilter: "blur(5px)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
         zIndex: 1000,
+        p: { xs: 2, sm: 3, md: 4 },
       }}
     >
       <Paper
         elevation={3}
         sx={{
-          p: 3,
-          maxWidth: '450px',
-          width: '100%',
-          position: 'relative',
-          zIndex: 1,
-          borderRadius: '20px',
+          p: { xs: 2, sm: 3, md: 4 },
+          maxWidth: "400px",
+          width: "100%",
+          borderRadius: "20px",
+          backgroundColor: "white",
         }}
       >
-        <Typography component="h1" variant="h5" align="center" sx={{ color: '#2BB673' }}>
+        <Typography
+          component="h1"
+          variant="h5"
+          align="center"
+          sx={{
+            color: "#2BB673",
+            fontSize: { xs: "1.2rem", md: "1rem" },
+          }}
+        >
           Register
         </Typography>
-      
+
         <form>
           {activeStep === 0 && (
             <Box sx={{ mt: 2 }}>
@@ -191,8 +258,9 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 autoFocus
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={samestyle}
               />
+
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -204,7 +272,7 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={samestyle}
               />
               <TextField
                 variant="outlined"
@@ -216,19 +284,53 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 name="phoneNumber"
                 autoComplete="tel"
                 value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value;
+                  value = value.replace(/^0+/, "");
+                  if (value.startsWith("+91")) {
+                    value = value.substring(3);
+                  }
+                  if (value.length > 10) {
+                    value = value.slice(value.length - 10);
+                  }
+                  setPhoneNumber(Number(value));
+                }}
+                sx={samestyle}
               />
-              <Typography variant="h6">
-                Already have an account?{' '}
-                <span
-                  style={{ cursor: 'pointer', color: 'blue', textDecoration: 'underline' }}
-                  onClick={() => { toggleSignup(); toggleMobile(); }}
+              <FormControl component="fieldset" sx={{ mt: 2 }}>
+                <FormLabel component="legend">Register As *</FormLabel>
+                <RadioGroup
+                  row
+                  aria-label="role"
+                  name="role"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  sx={{
+                    "& .MuiFormControlLabel-root": {
+                      "& .MuiRadio-root": {
+                        color: "black",
+                      },
+                      "& .Mui-checked": {
+                        color: "#2BB673",
+                      },
+                    },
+                  }}
                 >
-                  Login
-                </span>
-              </Typography>
+                  <FormControlLabel
+                    value="hospital"
+                    control={<Radio />}
+                    label="Hospital"
+                  />
+                  <FormControlLabel
+                    value="lab"
+                    control={<Radio />}
+                    label="Lab"
+                  />
+                </RadioGroup>
+              </FormControl>
             </Box>
           )}
+
           {activeStep === 1 && (
             <Box sx={{ mt: 2 }}>
               <TextField
@@ -239,10 +341,10 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 id="address"
                 label="Address"
                 name="address"
-                autoComplete="address"
+                autoComplete="street-address"
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={samestyle}
               />
               <TextField
                 variant="outlined"
@@ -252,10 +354,10 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 id="pincode"
                 label="Pincode"
                 name="pincode"
-                autoComplete="pincode"
+                autoComplete="postal-code"
                 value={pincode}
                 onChange={(e) => setPincode(e.target.value)}
-                sx={{ mb: 2 }}
+                sx={samestyle}
               />
               <TextField
                 variant="outlined"
@@ -265,88 +367,146 @@ function RegisterScreen({ toggleMobile, toggleLogin, toggleOtp, setMobileNumber,
                 id="city"
                 label="City"
                 name="city"
-                autoComplete="city"
+                autoComplete="address-level2"
                 value={city}
                 onChange={(e) => setCity(e.target.value)}
+                sx={samestyle}
               />
             </Box>
           )}
+
           {activeStep === 2 && (
             <Box sx={{ mt: 2 }}>
-              {openModal && (
-                <div
-                  style={{
-                    position: 'fixed',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: 'rgba(0, 0, 0, 0.4)',
-                    backdropFilter: 'blur(5px)',
-                    display: 'flex',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    zIndex: 1000,
+              <input
+                accept="image/*"
+                style={{ display: "none" }}
+                id="contained-button-file"
+                type="file"
+                onChange={handleImageChange}
+              />
+              <label htmlFor="contained-button-file">
+                <Button
+                  variant="contained"
+                  color="primary"
+                  component="span"
+                  fullWidth
+                  sx={{
+                    backgroundColor: "#2BB673",
+                    "&:hover": { backgroundColor: "#249d5f" },
                   }}
                 >
-                  <div
-                    style={{
-                      background: 'white',
-                      borderRadius: '10px',
-                      padding: '20px',
-                      width: '80%',
-                      height: '80%',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      position: 'relative',
-                    }}
-                  >
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      onClick={handleCloseModal}
-                      style={{ position: 'absolute', top: '10px', right: '10px' }}
-                    >
-                      Close
-                    </Button>
-                    <Typography variant="h6" gutterBottom>
-                      Upload Image and Set Location
-                    </Typography>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      style={{ marginBottom: '20px' }}
+                  Upload Image
+                </Button>
+              </label>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "center",
+                  mt: 2,
+                  mb: 2,
+                }}
+              >
+                {image && (
+                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="Uploaded"
+                      style={{
+                        width: "20px",
+                        height: "20px",
+                        borderRadius: "4px",
+                        marginRight: "8px",
+                      }}
                     />
-                    <MapContainer center={[latitude, longitude]} zoom={13} style={{ height: '60%', width: '100%' }}>
-                      <TileLayer
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      />
-                      <LocationMarker />
-                    </MapContainer>
-                  </div>
-                </div>
+                    <Button
+                      variant="text"
+                      onClick={() => setImage(null)}
+                      sx={{ color: "red", minWidth: "auto" }}
+                    >
+                      Cancel Image
+                    </Button> 
+                  </Box>
+                )}
+              </Box>
+
+              {isLoaded && (
+                <Autocomplete
+                  onLoad={(autocomplete) => {
+                    autocompleteRef.current = autocomplete;
+                  }}
+                  onPlaceChanged={() => {
+                    const place = autocompleteRef.current.getPlace();
+                    handlePlaceSelected(place);
+                  }}
+                >
+                  <TextField
+                    variant="outlined"
+                    margin="normal"
+                    fullWidth
+                    id="location"
+                    label="Search Location"
+                    name="location"
+                    autoComplete="off"
+                    sx={samestyle}
+                  />
+                </Autocomplete>
               )}
+
+              <Box
+                sx={{
+                  height: "300px",
+                  width: "100%",
+                  position: "relative",
+                  mt: 2,
+                  mb: 2,
+                }}
+              >
+                <MapContainer
+                  center={[latitude, longitude]}
+                  zoom={13}
+                  style={{ height: "100%", width: "100%" }}
+                >
+                  <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                  <LocationMarker />
+                </MapContainer>
+              </Box>
             </Box>
           )}
-          <Box sx={{ mt: 2 }}>
+
+          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
             <Button
-              color="secondary"
               disabled={activeStep === 0}
               onClick={handleBack}
-              sx={{ mr: 1 }}
+              sx={{
+                color: "black",
+                "&:hover": { backgroundColor: "transparent" },
+              }}
             >
               Back
             </Button>
             <Button
-              color="primary"
               variant="contained"
               onClick={handleNext}
               disabled={loading}
+              sx={{
+                backgroundColor: "#2BB673",
+                "&:hover": { backgroundColor: "#249d5f" },
+              }}
             >
-              {loading ? <CircularProgress size={24} /> : activeStep === steps.length - 1 ? 'Register' : 'Next'}
+              {activeStep === steps.length - 1 ? "Register" : "Next"}
+              {loading && (
+                <CircularProgress
+                  size={24}
+                  sx={{
+                    color: "white",
+                    position: "absolute",
+                    top: "50%",
+                    left: "50%",
+                    marginTop: "-12px",
+                    marginLeft: "-12px",
+                  }}
+                />
+              )}
             </Button>
           </Box>
         </form>

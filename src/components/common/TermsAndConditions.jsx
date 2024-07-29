@@ -5,7 +5,7 @@ import Footer from '../common/Footer';
 const TermsAndConditions = () => {
   return (
     <>  
-    <Container maxWidth="md" sx={{ padding: 4, backgroundColor: '#f9f9f9' }}>
+    <Container maxWidth="md" sx={{ padding: 4,  }}>
       <Typography variant="h4" component="h1" gutterBottom align="center">
         Terms and Conditions
       </Typography>

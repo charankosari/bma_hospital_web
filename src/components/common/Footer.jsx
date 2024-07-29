@@ -5,7 +5,7 @@ import { Facebook, Twitter, Instagram, LinkedIn } from '@mui/icons-material';
 
 function Footer() {
   return (
-    <footer style={{ backgroundColor: '#333333', padding: '40px 0', color: '#ffffff', borderTop: '1px solid #444444' }}>
+    <footer style={{ backgroundColor: '#333333', padding: '40px 0', color: '#ffffff', borderTop: '1px solid #444444',width:'100%',zIndex:'999' }}>
       <Container>
         <Grid container spacing={4}>
           <Grid item xs={12} sm={4}>
@@ -27,12 +27,6 @@ function Footer() {
             <Box component="ul" sx={{ listStyleType: 'none', padding: 0 }}>
               <Box component="li" sx={{ marginBottom: '8px' }}>
                 <MuiLink component={RouterLink} to='/' underline="none" color="inherit">Home</MuiLink>
-              </Box>
-              <Box component="li" sx={{ marginBottom: '8px' }}>
-                <MuiLink component={RouterLink} to='/hospital' underline="none" color="inherit">Hospitals</MuiLink>
-              </Box>
-              <Box component="li" sx={{ marginBottom: '8px' }}>
-                <MuiLink href="/lab" underline="none" color="inherit">Labs</MuiLink>
               </Box>
               <Box component="li" sx={{ marginBottom: '8px' }}>
                 <MuiLink component={RouterLink} to='/terms-conditions' underline="none" color="inherit">Terms and Conditions</MuiLink>
