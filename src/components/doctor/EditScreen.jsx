@@ -49,8 +49,58 @@ const EditScreen = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const menuOpen = Boolean(anchorEl);
 
-  const jwtToken = localStorage.getItem("hospitalToken"); // Replace with actual token
+  const jwtToken = localStorage.getItem("hospitalToken"); 
+  const validateFields = () => {
+    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeFormat.test(morningStartTime) ||
+        !timeFormat.test(morningEndTime) ||
+        !timeFormat.test(eveningStartTime) ||
+        !timeFormat.test(eveningEndTime)) {
+      alert('Please enter a valid time in HH:MM format.');
+      return false;
+    }
+    const morningStart = new Date(`1970-01-01T${morningStartTime}:00`);
+    const morningEnd = new Date(`1970-01-01T${morningEndTime}:00`);
+    const eveningStart = new Date(`1970-01-01T${eveningStartTime}:00`);
+    const eveningEnd = new Date(`1970-01-01T${eveningEndTime}:00`);
+    if (morningStartTime.trim() === "" ||
+        morningEndTime.trim() === "" ||
+        eveningStartTime.trim() === "" ||
+        eveningEndTime.trim() === "" ||
+        date.trim() === "" ||
+        isNaN(parseInt(noOfDays, 10)) ||
+        isNaN(parseInt(slotTimings, 10))) {
+      alert('Please fill out all required fields.');
+      return false;
+    }
+    if (morningStart.getTime() === morningEnd.getTime()) {
+      alert('Morning Start Time and End Time cannot be the same.');
+      return false;
+    }
+    if (morningStart > morningEnd) {
+      alert('Morning Start Time should be earlier than Morning End Time.');
+      return false;
+    }
+    if (eveningStart.getTime() === eveningEnd.getTime()) {
+      alert('Evening Start Time and End Time cannot be the same.');
+      return false;
+    }
+    if (eveningStart > eveningEnd) {
+      alert('Evening Start Time should be earlier than Evening End Time.');
+      return false;
+    }
+    if (eveningStart <= morningEnd) {
+      alert('Evening Start Time should be later than Morning End Time.');
+      return false;
+    }
+    if (morningEnd.getTime() === eveningStart.getTime()) {
+      alert('Morning End Time and Evening Start Time cannot be the same.');
+      return false;
+    }
 
+    return true;
+  };
+  
   const theme = createTheme({
     palette: {
       primary: {
@@ -152,7 +202,7 @@ const EditScreen = () => {
 
   const handleMenuItemClick = (option) => {
     setAnchorEl(null);
-    if (option === "Manage Slots") {
+    if (option === "Add Slots") {
       setManageSlotsDialogOpen(true);
     } else if (option === "Delete Doctor") {
       setDialogOpen(true);
@@ -161,18 +211,32 @@ const EditScreen = () => {
       navigate(`/doctor-bookings/${doctor._id}`)
     }
   };
-
   const handleSaveDoctorDetails = async () => {
     setLoading(true);
-
+    let hasChanges = false;
     const payload = { docid: id };
-    if (name !== doctor.name) payload.name = name;
-    if (study !== doctor.study) payload.study = study;
-    if (specialist !== doctor.specialist) payload.specialist = specialist;
+  
+    if (name !== doctor.name) {
+      payload.name = name;
+      hasChanges = true;
+    }
+    if (study !== doctor.study) {
+      payload.study = study;
+      hasChanges = true;
+    }
+    if (specialist !== doctor.specialist) {
+      payload.specialist = specialist;
+      hasChanges = true;
+    }
     if (consultancyFee !== doctor.price.consultancyfee) {
       payload.price = { consultancyfee: consultancyFee };
+      hasChanges = true;
     }
-
+    if (!hasChanges) {
+      alert('No details have been changed.');
+      setLoading(false);
+      return; 
+    }
     try {
       const response = await fetch(
         "https://server.bookmyappointments.in/api/bma/hospital/editdoctor",
@@ -272,6 +336,8 @@ const EditScreen = () => {
       setSnackbarMessage("Doctor deleted successfully!");
       setSnackbarOpen(true);
       navigate("/");
+      window.location.reload();
+      
     } catch (error) {
       console.error(error);
       setSnackbarMessage("Failed to delete doctor");
@@ -298,6 +364,9 @@ const EditScreen = () => {
   };
 
   const handleSaveSlots = async () => {
+      if (!validateFields()) {
+        return;
+      }
     setSlotLoading(true);
 
     const payload = {
@@ -314,6 +383,7 @@ const EditScreen = () => {
       noOfDays: parseInt(noOfDays),
       slotTimings: parseInt(slotTimings),
     };
+    console.log(payload)
 
     try {
       const response = await fetch(
@@ -361,7 +431,7 @@ const EditScreen = () => {
           <Grid item>
             <Typography variant="h4">Edit Doctor</Typography>
           </Grid>
-          <Grid item>
+          {/* <Grid item>
             <IconButton
               aria-label="menu"
               onClick={handleMenuOpen}
@@ -374,8 +444,8 @@ const EditScreen = () => {
               open={menuOpen}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={() => handleMenuItemClick("Manage Slots")}>
-                Manage Slots
+              <MenuItem onClick={() => handleMenuItemClick("Add Slots")}>
+              Add Slots
               </MenuItem>
               <MenuItem onClick={() => handleMenuItemClick("Delete Doctor")} sx={{color:'red'}}>
                 Delete Doctor 
@@ -384,7 +454,7 @@ const EditScreen = () => {
                 Show Bookings
               </MenuItem>
             </Menu>
-          </Grid>
+          </Grid> */}
         </Grid>
 
         <Box display="flex" mb={4} flexDirection='row' mt={4}>
@@ -439,10 +509,32 @@ const EditScreen = () => {
             />
           </Grid>
         </Grid>
-        <Box display="flex"  mt={4}>
-          <Button variant="contained" color="primary" onClick={handleSaveDoctorDetails}>
+        <Box display="flex"  mt={4} gap={4}>
+          <Button variant="contained" color="primary" sx={{color:'white'}} onClick={handleSaveDoctorDetails}>
             Save Details
           </Button>
+          <Button variant="contained" color="primary"  sx={{color:'white'}} onClick={() => handleMenuItemClick("Add Slots")}>
+            Add slots
+          </Button>
+          <Button variant="contained" color="primary"  sx={{color:'white'}} onClick={() => handleMenuItemClick("Show Bookings")}>
+          Show Bookings
+          </Button>
+          <Button
+  variant="contained"
+  color="primary"
+  sx={{
+    backgroundColor: 'red',
+    color: 'white',
+    '&:hover': {
+      backgroundColor: 'darkred',
+    },
+  }}
+  onClick={() => handleMenuItemClick("Delete Doctor")}
+>
+  Delete Doctor
+</Button>
+
+         
         </Box>
        
         <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)}>
@@ -456,10 +548,10 @@ const EditScreen = () => {
           </DialogActions>
         </Dialog>
         <Dialog open={manageSlotsDialogOpen} onClose={handleManageSlotsDialogClose}>
-          <DialogTitle>Manage Slots</DialogTitle>
+          <DialogTitle>Add Slots</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              Please fill out the details to manage slots for the doctor.
+              Please fill out the details to add slots for the doctor.
             </DialogContentText>
             <TextField
               fullWidth

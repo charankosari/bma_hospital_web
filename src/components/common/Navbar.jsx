@@ -19,13 +19,10 @@ const Navbar = ({ mobile, setMobile, toggleLogin, searchQuery, setSearchQuery })
     if (token) {
       setLogin(true);
     }
-
-    // handleSelectCurrentLocation();
   }, []);
 
   useEffect(() => {
     if (searchQuery) {
-      // Handle search query change if needed
     }
   }, [searchQuery]);
 
@@ -77,7 +74,7 @@ const Navbar = ({ mobile, setMobile, toggleLogin, searchQuery, setSearchQuery })
     <div className="navbar">
       <div className="navbar-content">
         <Link to="/">
-          <img src={logo} alt="Logo" className="logo" style={{ height: '80px', width: 'auto' }} />
+          <img src={logo} alt="Logo" className="logo" style={{ height: '60px', width: 'auto' }} />
         </Link>
         <div className="search-container">
           <FaSearch className="search-icon" />
@@ -92,7 +89,7 @@ const Navbar = ({ mobile, setMobile, toggleLogin, searchQuery, setSearchQuery })
         </div>
        
       </div>
-      {login ? (
+    
         <div className="dropdown-end">
           <div role="button" className="avatar" onClick={toggleAvatarDropdown}>
             <Avatar name="User" round={true} size="40" />
@@ -105,6 +102,8 @@ const Navbar = ({ mobile, setMobile, toggleLogin, searchQuery, setSearchQuery })
                 style={{ color: 'red', marginLeft: '10px', marginTop: '8px', marginBottom: '0px' }}
                 onClick={() => {
                   localStorage.removeItem('hospitalToken');
+                  localStorage.removeItem('hospId');
+                  localStorage.removeItem('role');
                   setLogin(false);
                   toggleLogin();
                   window.location.reload();
@@ -115,11 +114,7 @@ const Navbar = ({ mobile, setMobile, toggleLogin, searchQuery, setSearchQuery })
             </div>
           )}
         </div>
-      ) : (
-        <button className="login-button" onClick={handleVerify}>
-          Login
-        </button>
-      )}
+      
     </div>
   );
 };

@@ -38,7 +38,10 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
     googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API,
     libraries: ["places"],
   });
-
+  const login = () => {
+    toggleSignup();
+    toggleMobile();
+  };
   const samestyle = {
     mb: 2,
     fontSize: 18,
@@ -359,6 +362,8 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
                 onChange={(e) => setPincode(e.target.value)}
                 sx={samestyle}
               />
+
+              
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -372,62 +377,65 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
                 onChange={(e) => setCity(e.target.value)}
                 sx={samestyle}
               />
+   <Box display="flex" alignItems="center" gap={2} p={1} sx={{justifyContent:'space-between'}}>
+  <Typography variant="body1" sx={{ whiteSpace: 'nowrap', fontWeight: '500', color: '#333' }}>
+    Pick an image (optional):
+  </Typography>
+
+  {!image ? (
+    <>
+      <input
+        accept="image/*"
+        style={{ display: 'none' }}
+        id="contained-button-file"
+        type="file"
+        onChange={handleImageChange}
+      />
+      <label htmlFor="contained-button-file">
+        <Button
+          variant="contained"
+          color="primary"
+          component="span"
+          sx={{
+            padding: '6px 16px',
+            backgroundColor: '#2BB673',
+            '&:hover': { backgroundColor: '#249d5f' },
+          }}
+        >
+          Upload Image
+        </Button>
+      </label>
+    </>
+  ) : (
+    <Box display="flex" alignItems="center" gap={1.5}>
+      <img
+        src={URL.createObjectURL(image)}
+        alt="Uploaded"
+        style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '4px',
+          objectFit: 'cover',
+        }}
+      />
+      <Button
+        variant="text"
+        onClick={() => setImage(null)}
+        sx={{ color: 'red', minWidth: 'auto', padding: '0 8px' }}
+      >
+        Cancel Image
+      </Button>
+    </Box>
+  )}
+</Box>
+
+          
             </Box>
           )}
 
           {activeStep === 2 && (
             <Box sx={{ mt: 2 }}>
-              <input
-                accept="image/*"
-                style={{ display: "none" }}
-                id="contained-button-file"
-                type="file"
-                onChange={handleImageChange}
-              />
-              <label htmlFor="contained-button-file">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  component="span"
-                  fullWidth
-                  sx={{
-                    backgroundColor: "#2BB673",
-                    "&:hover": { backgroundColor: "#249d5f" },
-                  }}
-                >
-                  Upload Image
-                </Button>
-              </label>
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "center",
-                  mt: 2,
-                  mb: 2,
-                }}
-              >
-                {image && (
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    <img
-                      src={URL.createObjectURL(image)}
-                      alt="Uploaded"
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        borderRadius: "4px",
-                        marginRight: "8px",
-                      }}
-                    />
-                    <Button
-                      variant="text"
-                      onClick={() => setImage(null)}
-                      sx={{ color: "red", minWidth: "auto" }}
-                    >
-                      Cancel Image
-                    </Button> 
-                  </Box>
-                )}
-              </Box>
+          
 
               {isLoaded && (
                 <Autocomplete
@@ -510,7 +518,9 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
             </Button>
           </Box>
         </form>
+      <Typography variant="h8" style={{marginLeft:'5px',marginTop:'5px'}}>Already had an account .? <span style={{color:'#2BB673',cursor:'pointer'}} onClick={()=>{login()}}>Login</span></Typography>
       </Paper>
+
     </Box>
   );
 }

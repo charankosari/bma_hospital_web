@@ -186,9 +186,10 @@ const LabsList = ({ searchQuery }) => {
 
   useEffect(() => {
     const filtered = allTests.filter(
+
       (test) =>
         test.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        test.code.toLowerCase().includes(searchQuery.toLowerCase())
+        test.code.toLowerCase().includes(searchQuery.toLowerCase()) 
     );
     setfilteredTests(filtered);
   }, [searchQuery, allTests]);
@@ -228,12 +229,13 @@ const LabsList = ({ searchQuery }) => {
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    const MAX_SIZE_MB = 2;
-
-    if (file.size / (1024 * 1024) > MAX_SIZE_MB) {
+    const maxSizeInBytes = 2 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
       setUploadError("Image size should be less than 2 MB.");
+      alert("File size exceeds 2 MB. Please upload a smaller file.");
       return;
     }
+   
 
     setImageFile(file);
     setUploadError(null);
@@ -248,10 +250,55 @@ const LabsList = ({ searchQuery }) => {
   };
 
   const handleSubmit = async () => {
-    if(!newTest.imageUrl||!newTest.name||!newTest.appointmentDuration||!newTest.consultancyFee||!newTest.eveningStartTime||!newTest.eveningEndTime||!newTest.morningEndTime||!newTest.morningStartTime||!newTest.noOfDays )
-    {
+    const isAnyFieldEmpty = Object.keys(newTest).some(field => 
+      field !== 'imageUrl' && (newTest[field] === '' || newTest[field] === undefined || newTest[field] === null)
+    );
+  
+    if (isAnyFieldEmpty || imageFile === null) {
       alert('Fill all the details');
-      handleModalClose();
+      return; 
+    }
+    const morningStart = new Date(`1970-01-01T${newTest.morningStartTime}:00`);
+    const morningEnd = new Date(`1970-01-01T${newTest.morningEndTime}:00`);
+    const eveningStart = new Date(`1970-01-01T${newTest.eveningStartTime}:00`);
+    const eveningEnd = new Date(`1970-01-01T${newTest.eveningEndTime}:00`);
+    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeFormat.test(newTest.morningStartTime) ||
+        !timeFormat.test(newTest.morningEndTime) ||
+        !timeFormat.test(newTest.eveningStartTime) ||
+        !timeFormat.test(newTest.eveningEndTime)) {
+      alert('Please enter a valid time in HH:MM format.');
+      return;
+    }
+  
+    if (morningStart.getTime() === morningEnd.getTime()) {
+      alert('Morning Start Time and End Time cannot be the same.');
+      return;
+    }
+  
+    if (morningStart > morningEnd) {
+      alert('Morning Start Time should be earlier than Morning End Time.');
+      return;
+    }
+  
+    if (eveningStart.getTime() === eveningEnd.getTime()) {
+      alert('Evening Start Time and End Time cannot be the same.');
+      return;
+    }
+  
+    if (eveningStart > eveningEnd) {
+      alert('Evening Start Time should be earlier than Evening End Time.');
+      return;
+    }
+  
+    if (eveningStart <= morningEnd) {
+      alert('Evening Start Time should be later than Morning End Time.');
+      return;
+    }
+  
+    if (morningEnd.getTime() === eveningStart.getTime()) {
+      alert('Morning End Time and Evening Start Time cannot be the same.');
+      return;
     }
     try {
       const token = localStorage.getItem("hospitalToken");
@@ -340,21 +387,6 @@ const LabsList = ({ searchQuery }) => {
     );
   }
 
-  if (error) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h6" color="error">
-          {error}
-        </Typography>
-      </Box>
-    );
-  }
-
   return (
     <ThemeProvider theme={theme}>
       <Container sx={{ minHeight: "70vh", width: "100%" }}>
@@ -372,6 +404,7 @@ const LabsList = ({ searchQuery }) => {
             justifyContent="center"
             alignItems="center"
             flexDirection="column"
+            minHeight='70vh'
           >
             <PersonOutlineIcon sx={{ fontSize: 100, color: "#cccccc" }} />
             <Typography variant="h6" color="textSecondary">
@@ -389,7 +422,14 @@ const LabsList = ({ searchQuery }) => {
                   padding: 2,
                   boxShadow: 3,
                   borderRadius: 2,
-                  cursor:'pointer'
+                  cursor:'pointer',
+                  transition: 'background-color 0.3s ease, color 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#2BB673',
+                    '& .MuiTypography-root': {
+                      color: '#fff',
+                    },
+                  },
                 }}
                 onClick={()=>{ navigate(`/test/${test._id}`,{state:test})}}
               >

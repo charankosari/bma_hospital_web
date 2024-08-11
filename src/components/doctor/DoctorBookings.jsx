@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-
+import '../../App.css'
 const MyBookings = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
@@ -103,9 +103,9 @@ const MyBookings = () => {
   return (
     <div style={styles.container}>
       {loading ? (
-        <div style={styles.spinnerContainer}>
-          <div style={styles.spinner}></div>
-        </div>
+        <div className='spinnerContainer'>
+        <div className='spinner'></div>
+      </div>
       ) : (
         <div style={styles.scrollViewContent}>
           {todayBookings.length > 0 && (
@@ -143,26 +143,7 @@ const styles = {
     padding: '20px',
     backgroundColor: 'white',
   },
-  spinnerContainer: {
-    position: 'fixed',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    display: 'flex',
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    zIndex: 99,
-  },
-  spinner: {
-    border: '8px solid #f3f3f3',
-    borderTop: '8px solid #2BB673',
-    borderRadius: '50%',
-    width: '60px',
-    height: '60px',
-    animation: 'spin 1.5s linear infinite',
-  },
+
   scrollViewContent: {
     padding: '20px',
   },
@@ -217,13 +198,4 @@ const styles = {
     color: '#555',
   },
 };
-
 export default MyBookings;
-const styleSheet = document.styleSheets[0];
-const keyframes =
-  `@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }`;
-
-styleSheet.insertRule(keyframes, styleSheet.cssRules.length);

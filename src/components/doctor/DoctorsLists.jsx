@@ -31,6 +31,7 @@ import {
 } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { RxCross2 } from "react-icons/rx";
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -81,9 +82,27 @@ const theme = createTheme({
         },
       },
     },
+    MuiPickersToolbar: {
+      styleOverrides: {
+        root: {
+          backgroundColor: "#2BB673",
+        },
+      },
+    },
+    MuiPickersClock: {
+      styleOverrides: {
+        pin: {
+          backgroundColor: "#2BB673",
+        },
+        pointer: {
+          backgroundColor: "#2BB673",
+        },
+      },
+    },
   },
 });
-const DoctorList = ({ searchQuery }) => {
+
+const DoctorList = ({ searchQuery, doctors }) => {
   const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [allDoctors, setAllDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -134,22 +153,23 @@ const DoctorList = ({ searchQuery }) => {
     },
   };
   useEffect(() => {
-    async function fetchRoleAndData() {
+    if (doctors) {
       try {
-        setHospid(hospitalId);
-        if (userRole && hospitalId) {
-          fetchData(userRole, hospitalId);
+        setLoading(false);
+        if (doctors.length > 0) {
+          setAllDoctors(doctors);
+          setFilteredDoctors(doctors);
+          setError(null);
         } else {
-          throw new Error("Role or Hospital ID is missing");
+          throw new Error("No doctors data available.");
         }
       } catch (error) {
-        console.error("Failed to fetch role and hospital ID:", error);
-        setError("Failed to fetch role and hospital ID.");
-        setLoading(false);
+        console.error("Error processing data:", error);
+        setError("Failed to process data. Please try again later.");
+        setFilteredDoctors([]);
       }
     }
-    fetchRoleAndData();
-  }, []);
+  }, [doctors]);
 
   const fetchData = async (userRole, hospitalId) => {
     try {
@@ -241,13 +261,13 @@ const DoctorList = ({ searchQuery }) => {
 
   const handleImageUpload = async (event) => {
     const file = event.target.files[0];
-    const MAX_SIZE_MB = 2;
-
-    if (file.size / (1024 * 1024) > MAX_SIZE_MB) {
+    const maxSizeInBytes = 2 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
       setUploadError("Image size should be less than 2 MB.");
+      alert("File size exceeds 2 MB. Please upload a smaller file.");
       return;
     }
-
+   
     setImageFile(file);
     setUploadError(null);
   };
@@ -261,11 +281,57 @@ const DoctorList = ({ searchQuery }) => {
   };
 
   const handleSubmit = async () => {
-    if(newDoctor.imageUrl||newDoctor.name||newDoctor.specialization||newDoctor.appointmentDuration||newDoctor.consultancyFee||newDoctor.eveningStartTime||newDoctor.eveningEndTime||newDoctor.morningEndTime||newDoctor.morningStartTime||newDoctor.noOfDays ==='')
-    {
+    const isAnyFieldEmpty = Object.keys(newDoctor).some(field =>
+      field !== 'imageUrl' && (newDoctor[field] === '' || newDoctor[field] === undefined || newDoctor[field] === null)
+    );
+
+    if (isAnyFieldEmpty || imageFile === null) {
       alert('Fill all the details');
-      handleModalClose();
+      return;
     }
+    const morningStart = new Date(`1970-01-01T${newDoctor.morningStartTime}:00`);
+    const morningEnd = new Date(`1970-01-01T${newDoctor.morningEndTime}:00`);
+    const eveningStart = new Date(`1970-01-01T${newDoctor.eveningStartTime}:00`);
+    const eveningEnd = new Date(`1970-01-01T${newDoctor.eveningEndTime}:00`);
+    const timeFormat = /^([01]\d|2[0-3]):([0-5]\d)$/;
+    if (!timeFormat.test(newDoctor.morningStartTime) ||
+        !timeFormat.test(newDoctor.morningEndTime) ||
+        !timeFormat.test(newDoctor.eveningStartTime) ||
+        !timeFormat.test(newDoctor.eveningEndTime)) {
+      alert('Please enter a valid time in HH:MM format.');
+      return;
+    }
+  
+    if (morningStart.getTime() === morningEnd.getTime()) {
+      alert('Morning Start Time and End Time cannot be the same.');
+      return;
+    }
+  
+    if (morningStart > morningEnd) {
+      alert('Morning Start Time should be earlier than Morning End Time.');
+      return;
+    }
+  
+    if (eveningStart.getTime() === eveningEnd.getTime()) {
+      alert('Evening Start Time and End Time cannot be the same.');
+      return;
+    }
+  
+    if (eveningStart > eveningEnd) {
+      alert('Evening Start Time should be earlier than Evening End Time.');
+      return;
+    }
+  
+    if (eveningStart <= morningEnd) {
+      alert('Evening Start Time should be later than Morning End Time.');
+      return;
+    }
+  
+    if (morningEnd.getTime() === eveningStart.getTime()) {
+      alert('Morning End Time and Evening Start Time cannot be the same.');
+      return;
+    }
+
     try {
       const token = localStorage.getItem("hospitalToken");
       let imageUrl = newDoctor.imageUrl;
@@ -316,7 +382,8 @@ const DoctorList = ({ searchQuery }) => {
         slotTimings: parseInt(newDoctor.appointmentDuration),
         noOfDays: parseInt(newDoctor.noOfDays),
       };
-
+      
+console.log(newDoctorData)
       const response = await fetch(
         `https://server.bookmyappointments.in/api/bma/hospital/adddoctor`,
         {
@@ -355,20 +422,7 @@ const DoctorList = ({ searchQuery }) => {
     );
   }
 
-  if (error) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-      >
-        <Typography variant="h6" color="error">
-          {error}
-        </Typography>
-      </Box>
-    );
-  }
+
 
   return (
     <ThemeProvider theme={theme}>
@@ -376,41 +430,59 @@ const DoctorList = ({ searchQuery }) => {
         <Box position="absolute" bottom={"20%"} right={16} zIndex={1}>
           <IconButton
             onClick={handleAddDoctor}
-            sx={{ backgroundColor: "#2BB673", color: "white" }}
+            sx={{
+              backgroundColor: "#2BB673", color: "white", height: '60px', width: '60px', transition: 'background-color 0.3s ease, color 0.3s ease',
+              '&:hover': {
+                backgroundColor: '#18a561',
+                '& .MuiTypography-root': {
+                  color: '#fff',
+                },
+              },
+            }}
           >
-            <AddIcon />
+            <AddIcon sx={{ height: '30px', width: '30px' }} />
           </IconButton>
         </Box>
         {filteredDoctors.length === 0 ? (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            flexDirection="column"
-          >
-            <PersonOutlineIcon sx={{ fontSize: 100, color: "#cccccc" }} />
-            <Typography variant="h6" color="textSecondary">
-              No doctors are available
-            </Typography>
-          </Box>
+          <div style={{ display: 'flex', justifyContent: 'center', alignContent: 'center', height: '70vh' }}>
+            <Box
+              display="flex"
+              justifyContent="center"
+              alignItems="center"
+              flexDirection="column"
+              height='100%'
+            >
+              <PersonOutlineIcon sx={{ fontSize: 100, color: "#cccccc" }} />
+              <Typography variant="h6" color="textSecondary">
+                No doctors are available
+              </Typography>
+            </Box>
+          </div>
         ) : (
-          <Box display="flex" flexDirection="column" gap={2} sx={{marginTop:'10px',marginBottom:'10px'}}>
+          <Box display="flex" flexDirection="column" gap={2} sx={{ marginTop: '10px', marginBottom: '10px' }}>
             {filteredDoctors.map((doctor, index) => (
-                
+
               <Card
                 key={index}
                 sx={{
                   display: "flex",
-                  padding: 2,
+                  padding: 1,
                   boxShadow: 3,
                   borderRadius: 2,
-                  cursor:'pointer'
+                  cursor: 'pointer',
+                  transition: 'background-color 0.3s ease, color 0.3s ease',
+                  '&:hover': {
+                    backgroundColor: '#2BB673',
+                    '& .MuiTypography-root': {
+                      color: '#fff',
+                    },
+                  },
                 }}
-                onClick={()=>{ navigate(`/doctor/${doctor._id}`,{state:doctor})}}
+                onClick={() => { navigate(`/doctor/${doctor._id}`, { state: doctor }) }}
               >
-                 <CardMedia
+                <CardMedia
                   component="img"
-                  sx={{ width: 100, borderRadius: 2 }}
+                  sx={{ width: '100px', height: '100px', objectFit: 'contain', borderRadius: 2 }}
                   image={doctor.image}
                   alt={doctor.name}
                 />
@@ -420,7 +492,7 @@ const DoctorList = ({ searchQuery }) => {
                     {doctor.specialist}
                   </Typography>
                 </CardContent>
-               
+
               </Card>
             ))}
           </Box>
@@ -547,7 +619,7 @@ const DoctorList = ({ searchQuery }) => {
                       }}
                     />
                     <IconButton onClick={handleCancelImage}>
-                    <RxCross2 />
+                      <RxCross2 />
                     </IconButton>
                   </Box>
                 )}
@@ -556,7 +628,7 @@ const DoctorList = ({ searchQuery }) => {
             {activeStep === 1 && (
               <Box>
                 <TextField
-                  label="Morning Start Time"
+                  label="Morning Start Time (24-hour format)"
                   name="morningStartTime"
                   value={newDoctor.morningStartTime}
                   onChange={handleInputChange}
@@ -565,9 +637,10 @@ const DoctorList = ({ searchQuery }) => {
                   fullWidth
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ pattern: "[0-9]{2}:[0-9]{2}" }} 
                 />
                 <TextField
-                  label="Morning End Time"
+                  label="Morning End Time (24-hour format)"
                   name="morningEndTime"
                   value={newDoctor.morningEndTime}
                   onChange={handleInputChange}
@@ -576,9 +649,10 @@ const DoctorList = ({ searchQuery }) => {
                   fullWidth
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ pattern: "[0-9]{2}:[0-9]{2}" }} 
                 />
                 <TextField
-                  label="Evening Start Time"
+                  label="Evening Start Time (24-hour format)"
                   name="eveningStartTime"
                   style={samestyle}
                   value={newDoctor.eveningStartTime}
@@ -587,9 +661,10 @@ const DoctorList = ({ searchQuery }) => {
                   fullWidth
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ pattern: "[0-9]{2}:[0-9]{2}" }}
                 />
                 <TextField
-                  label="Evening End Time"
+                  label="Evening End Time (24-hour format)"
                   name="eveningEndTime"
                   style={samestyle}
                   value={newDoctor.eveningEndTime}
@@ -598,27 +673,33 @@ const DoctorList = ({ searchQuery }) => {
                   fullWidth
                   margin="normal"
                   InputLabelProps={{ shrink: true }}
+                  inputProps={{ pattern: "[0-9]{2}:[0-9]{2}" }} 
                 />
                 <TextField
-                  label="Appointment Duration"
+                  label="Appointment Duration (minutes)"
                   name="appointmentDuration"
                   style={samestyle}
+                  type="number"
                   value={newDoctor.appointmentDuration}
                   onChange={handleInputChange}
                   fullWidth
                   margin="normal"
+                  InputProps={{ inputProps: { min: 1, pattern: "\\d*" } }}
                 />
                 <TextField
                   label="Number of Days"
                   style={samestyle}
                   name="noOfDays"
+                  type="number"
                   value={newDoctor.noOfDays}
                   onChange={handleInputChange}
                   fullWidth
                   margin="normal"
+                  InputProps={{ inputProps: { min: 1, pattern: "\\d*" } }}
                 />
               </Box>
             )}
+
           </DialogContent>
           <DialogActions>
             <Button onClick={handleModalClose} color="secondary">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
-
+import '../../App.css'
 const MyBookings = () => {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
@@ -103,8 +103,8 @@ const MyBookings = () => {
   return (
     <div style={styles.container}>
       {loading ? (
-        <div style={styles.spinnerContainer}>
-          <div style={styles.spinner}></div>
+        <div className='spinnerContainer'>
+          <div className='spinner'></div>
         </div>
       ) : (
         <div style={styles.scrollViewContent}>
@@ -219,11 +219,3 @@ const styles = {
 };
 
 export default MyBookings;
-const styleSheet = document.styleSheets[0];
-const keyframes =
-  `@keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
-  }`;
-
-styleSheet.insertRule(keyframes, styleSheet.cssRules.length);

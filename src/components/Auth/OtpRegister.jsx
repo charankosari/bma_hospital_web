@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './OtpScreen.css';
 
-function OtpRegister({ toggleLogin, toggleReg, toggleSignup, mobileNumber }) {
+function OtpRegister({ toggleLogin, toggleReg, toggleSignup, mobileNumber,fetchData,fetchData2 }) {
   const inputRefs = useRef([]);
   const navigate = useNavigate();
   const [otp, setOtp] = useState(Array(4).fill(''));
@@ -52,6 +52,8 @@ function OtpRegister({ toggleLogin, toggleReg, toggleSignup, mobileNumber }) {
       if (response.status === 201) {
         sessionStorage.removeItem('registrationData'); 
         localStorage.setItem('hospitalToken', data.jwtToken);
+        await fetchData2(data.jwtToken);
+        await fetchData(data.hosp.role,data.hosp._id);
         toggleReg();
         toggleSignup();
         window.location.reload()

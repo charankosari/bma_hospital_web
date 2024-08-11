@@ -9,11 +9,12 @@ import {
   Container,
   IconButton,
   Paper,
+  Avatar,
   ThemeProvider,
   createTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-
+import AddPhotoIcon from "@mui/icons-material/AddPhotoAlternate";
 const theme = createTheme({
   palette: {
     primary: {
@@ -37,6 +38,71 @@ const AccountDetails = () => {
   const [isLoadingSendOtp, setIsLoadingSendOtp] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [image, setImage] = useState(null);
+  const [imageUrl, setImageUrl] = useState("");
+  const [address, setAddress] = useState("");
+  const [pincode, setPincode] = useState("");
+  const [city, setCity] = useState("");
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const maxSizeInBytes = 2 * 1024 * 1024;
+    if (file.size > maxSizeInBytes) {
+      alert("File size exceeds 2 MB. Please upload a smaller file.");
+      return;
+    }
+  
+  
+    setImage(file);
+  
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+  
+      const uploadResponse = await fetch(
+        "https://server.bookmyappointments.in/api/bma/hospital/profileupload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      const uploadData = await uploadResponse.json();
+  
+      if (uploadResponse.status !== 200) {
+        throw new Error(uploadData.error || "Failed to upload image");
+      }
+  
+      const imageUrl = uploadData.url;
+  
+      const token = localStorage.getItem("hospitalToken");
+      const updatedFields = {
+        image: [imageUrl],
+      };
+      const updateResponse = await fetch(
+        "https://server.bookmyappointments.in/api/bma/hospital/me/profileupdate",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedFields),
+        }
+      );
+      const updateResult = await updateResponse.json();
+      if (updateResponse.ok && updateResult.success) {
+        alert("Profile updated successfully!");
+        setImageUrl(imageUrl);
+      } else {
+        console.error("Failed to update profile:", updateResult);
+        alert("Failed to update profile");
+      }
+    } catch (error) {
+      console.error("Error handling image upload:", error);
+    }
+  };
+  
 
   useEffect(() => {
     const fetchHospitalDetails = async () => {
@@ -58,6 +124,16 @@ const AccountDetails = () => {
           setName(result.hosp.hospitalName);
           setEmail(result.hosp.email);
           setMobileNumber(result.hosp.number.toString());
+          if (Array.isArray(result.hosp.image) && result.hosp.image.length > 0) {
+            setImageUrl(result.hosp.image[0]);
+          } else if (typeof result.hosp.image === 'string' && result.hosp.image) {
+            setImageUrl(result.hosp.image);
+          } else {
+            setImageUrl(''); 
+          }
+          setAddress(result.hosp.address[0].hospitalAddress|| '') ;
+        setPincode(result.hosp.address[0].pincode);
+        setCity(result.hosp.address[0].city);
         } else {
           console.error("Failed to fetch hospital details:", result);
         }
@@ -149,15 +225,25 @@ const AccountDetails = () => {
     try {
       const token = localStorage.getItem("hospitalToken");
       const updatedFields = {};
-
       if (name !== data.hosp.hospitalName) {
         updatedFields.hospitalName = name;
       }
-
       if (email !== data.hosp.email) {
         updatedFields.email = email;
       }
-
+      const addressUpdates = {};
+      if (address !== data.hosp.address[0]?.hospitalAddress) {
+        addressUpdates.hospitalAddress = address;
+      }
+      if (city !== data.hosp.address[0]?.city) {
+        addressUpdates.city = city;
+      }
+      if (pincode !== data.hosp.address[0]?.pincode) {
+        addressUpdates.pincode = pincode;
+      }
+      if (Object.keys(addressUpdates).length > 0) {
+        updatedFields.address = addressUpdates;
+      }
       if (Object.keys(updatedFields).length === 0) {
         alert("No changes to update.");
         return;
@@ -173,9 +259,8 @@ const AccountDetails = () => {
           body: JSON.stringify(updatedFields),
         }
       );
-
       const result = await response.json();
-
+  
       if (response.ok && result.success) {
         alert("Profile updated successfully!");
       } else {
@@ -186,10 +271,11 @@ const AccountDetails = () => {
       console.error("Error updating profile:", error);
     }
   };
+  
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh" >
         <CircularProgress />
       </Box>
     );
@@ -197,7 +283,28 @@ const AccountDetails = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Container>
+      <Container sx={{height:'auto'}}>
+      <Box display="flex" flexDirection="column" alignItems="center" marginBottom={3}>
+            <Avatar
+              src={imageUrl || ""} 
+              alt={name || "Profile Picture"}
+              sx={{ width: 120, height: 120 }}
+            >
+              {!imageUrl && <AddPhotoIcon />} 
+            </Avatar>
+            <input
+              accept="image/*"
+              id="icon-button-file"
+              type="file"
+              style={{ display: "none" }}
+              onChange={handleImageUpload}
+            />
+            <label htmlFor="icon-button-file" style={{ marginTop: '20px' }}>
+              <IconButton color="primary" aria-label="upload picture" component="span">
+                <AddPhotoIcon /> <span style={{ fontSize: '12px' }}>Change Image</span>
+              </IconButton>
+            </label>
+          </Box>
         <Box component={Paper} padding={3} mt={3}>
           <Box marginBottom={3}>
             <TextField
@@ -215,6 +322,32 @@ const AccountDetails = () => {
               fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+            />
+          </Box>
+          <Box marginBottom={3}>
+            <TextField
+              label="Address"
+              variant="outlined"
+              fullWidth
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              label="City"
+              variant="outlined"
+              fullWidth
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              margin="normal"
+            />
+            <TextField
+              label="Pincode"
+              variant="outlined"
+              fullWidth
+              value={pincode}
+              onChange={(e) => setPincode(e.target.value)}
+              margin="normal"
             />
           </Box>
           <Box marginBottom={3} display="flex" alignItems="center">
