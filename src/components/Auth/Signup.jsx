@@ -64,7 +64,7 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
     },
   };
 
-  const autocompleteRef = useRef(null); 
+  const autocompleteRef = useRef(null);
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
@@ -356,6 +356,7 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
                 fullWidth
                 id="pincode"
                 label="Pincode"
+                type="number"
                 name="pincode"
                 autoComplete="postal-code"
                 value={pincode}
@@ -363,7 +364,6 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
                 sx={samestyle}
               />
 
-              
               <TextField
                 variant="outlined"
                 margin="normal"
@@ -377,66 +377,75 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
                 onChange={(e) => setCity(e.target.value)}
                 sx={samestyle}
               />
-   <Box display="flex" alignItems="center" gap={2} p={1} sx={{justifyContent:'space-between'}}>
-  <Typography variant="body1" sx={{ whiteSpace: 'nowrap', fontWeight: '500', color: '#333' }}>
-    Pick an image (optional):
-  </Typography>
+              <Box
+                display="flex"
+                alignItems="center"
+                gap={2}
+                p={1}
+                sx={{ justifyContent: "space-between" }}
+              >
+                <Typography
+                  variant="body1"
+                  sx={{
+                    whiteSpace: "nowrap",
+                    fontWeight: "500",
+                    color: "#333",
+                  }}
+                >
+                  Pick an image (optional):
+                </Typography>
 
-  {!image ? (
-    <>
-      <input
-        accept="image/*"
-        style={{ display: 'none' }}
-        id="contained-button-file"
-        type="file"
-        onChange={handleImageChange}
-      />
-      <label htmlFor="contained-button-file">
-        <Button
-          variant="contained"
-          color="primary"
-          component="span"
-          sx={{
-            padding: '6px 16px',
-            backgroundColor: '#2BB673',
-            '&:hover': { backgroundColor: '#249d5f' },
-          }}
-        >
-          Upload Image
-        </Button>
-      </label>
-    </>
-  ) : (
-    <Box display="flex" alignItems="center" gap={1.5}>
-      <img
-        src={URL.createObjectURL(image)}
-        alt="Uploaded"
-        style={{
-          width: '40px',
-          height: '40px',
-          borderRadius: '4px',
-          objectFit: 'cover',
-        }}
-      />
-      <Button
-        variant="text"
-        onClick={() => setImage(null)}
-        sx={{ color: 'red', minWidth: 'auto', padding: '0 8px' }}
-      >
-        Cancel Image
-      </Button>
-    </Box>
-  )}
-</Box>
-
-          
+                {!image ? (
+                  <>
+                    <input
+                      accept="image/*"
+                      style={{ display: "none" }}
+                      id="contained-button-file"
+                      type="file"
+                      onChange={handleImageChange}
+                    />
+                    <label htmlFor="contained-button-file">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        component="span"
+                        sx={{
+                          padding: "6px 16px",
+                          backgroundColor: "#2BB673",
+                          "&:hover": { backgroundColor: "#249d5f" },
+                        }}
+                      >
+                        Upload Image
+                      </Button>
+                    </label>
+                  </>
+                ) : (
+                  <Box display="flex" alignItems="center" gap={1.5}>
+                    <img
+                      src={URL.createObjectURL(image)}
+                      alt="Uploaded"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        borderRadius: "4px",
+                        objectFit: "cover",
+                      }}
+                    />
+                    <Button
+                      variant="text"
+                      onClick={() => setImage(null)}
+                      sx={{ color: "red", minWidth: "auto", padding: "0 8px" }}
+                    >
+                      Cancel Image
+                    </Button>
+                  </Box>
+                )}
+              </Box>
             </Box>
           )}
 
           {activeStep === 2 && (
             <Box sx={{ mt: 2 }}>
-          
-
               {isLoaded && (
                 <Autocomplete
                   onLoad={(autocomplete) => {
@@ -481,13 +490,21 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
             </Box>
           )}
 
-          <Box sx={{ display: "flex", justifyContent: "space-between", mt: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              mt: 2,
+              mb: 2,
+            }}
+          >
             <Button
               disabled={activeStep === 0}
               onClick={handleBack}
               sx={{
                 color: "black",
-                "&:hover": { backgroundColor: "transparent" },
+                backgroundColor: "#d7d7d7",
+                "&:hover": { backgroundColor: "#a2a2a2" },
               }}
             >
               Back
@@ -518,9 +535,21 @@ function RegisterScreen({ toggleMobile, toggleSignup, toggleReg }) {
             </Button>
           </Box>
         </form>
-      <Typography variant="h8" style={{marginLeft:'5px',marginTop:'5px'}}>Already had an account .? <span style={{color:'#2BB673',cursor:'pointer'}} onClick={()=>{login()}}>Login</span></Typography>
+        <Typography
+          variant="h8"
+          style={{ marginLeft: "5px", marginTop: "5px" }}
+        >
+          Already had an account .?{" "}
+          <span
+            style={{ color: "#2BB673", cursor: "pointer" }}
+            onClick={() => {
+              login();
+            }}
+          >
+            Login
+          </span>
+        </Typography>
       </Paper>
-
     </Box>
   );
 }

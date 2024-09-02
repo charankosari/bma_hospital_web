@@ -44,11 +44,15 @@ function MobileVerify({
 
       const data = await response.json();
       console.log(data);
+
       sessionStorage.setItem("hospid", data.hospid);
       if (response.ok) {
         setHospitalToken(data.token);
+
         setHospid(data.hospid);
         localStorage.setItem("hospitalToken", data.token);
+        sessionStorage.setItem("mobileNumber", mobileNumber);
+
         toggleMobile();
         toggleOtp();
       } else {
@@ -74,7 +78,6 @@ function MobileVerify({
           type="number"
           placeholder="Mobile Number"
           value={mobileNumber || ""}
-          // onChange={(e) => setMobileNumber(e.target.value)}
           onChange={handleMobileNumberChange}
           disabled={loading}
         />
